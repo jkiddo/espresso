@@ -31,7 +31,8 @@ public class Application implements ApplicationRunner {
     //@Value("#{'${profiles:http://hl7.dk/fhir/core/StructureDefinition/dk-core-cpr-identifier,http://hl7.dk/fhir/core/StructureDefinition/dk-core-gln-identifier}'.split(',')}")
     @Value("${profiles:}")
     private List<String> profiles;
-    @Value("${package:package.tgz}")
+    //@Value("${package:file:/Users/jkiddo/work/espresso/src/main/resources/package.tgz}")
+    @Value("${package:https://hl7.dk/fhir/core/package.tgz}")
     private String packagePath;
 
     public static void main(String[] args) throws Exception {
