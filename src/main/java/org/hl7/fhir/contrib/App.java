@@ -16,15 +16,17 @@ public class App {
         try {
             var outputFolder = "target/generated-sources/java";
             var packageName = "org.example.fhir.generated";
-            var profiles = List.of("http://hl7.dk/fhir/core/StructureDefinition/dk-core-cpr-identifier",
-                    "http://hl7.dk/fhir/core/StructureDefinition/dk-core-gln-identifier");
+            var profiles = List.of(
+                    "http://hl7.dk/fhir/core/StructureDefinition/dk-core-cpr-identifier",
+                    "http://hl7.dk/fhir/core/StructureDefinition/dk-core-gln-identifier"
+            );
 
             var npmPackage = NpmPackage.fromPackage(new ClassPathResource("package.tgz").getInputStream());
 
 
             // Step 1: Load core FHIR definitions
             SimpleWorkerContext workerContext = SimpleWorkerContext.fromPackage(npmPackage);
-            workerContext.loadFromFolder("src/main/resources/definitions.json");
+            workerContext.loadFromFolder("src/main/resources/r4/definitions.json");
 
 
             Path path = Path.of(outputFolder, packageName.replaceAll("\\.", "/"));
