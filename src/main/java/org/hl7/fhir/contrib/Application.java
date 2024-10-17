@@ -43,31 +43,18 @@ public class Application implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
 
         NpmPackage npmPackage = validatePackage();
-
         new CodeGenerator(npmPackage, outputFolder, packageName, profiles).generateCode();
     }
 
     private NpmPackage validatePackage() throws IOException {
 
-        /*var resource = new DefaultResourceLoader().getResource(packagePath);
-
-        if (!resource.exists()) throw new IllegalArgumentException("Package not found: " + packagePath);
-*/
-        FilesystemPackageCacheManager packageManager = new FilesystemPackageCacheManager.Builder().build();
-
-        //if ("file".equals(resource.getURL().getProtocol())) {
+        var packageManager = new FilesystemPackageCacheManager.Builder().build();
         var npmAsBytes = new PackageLoaderSvc().loadPackageUrlContents(packagePath);
         var npmPackage = NpmPackage.fromPackage(new ByteArrayInputStream(npmAsBytes));
         packageManager.addPackageToCache(npmPackage.id(), npmPackage.version(), new ByteArrayInputStream(npmAsBytes), npmPackage.description());
-        packagePath = npmPackage.id() + "#" + npmPackage.version();
-        //}
-
-        return packageManager.loadPackage(packagePath);
-
-
+        var packageId = npmPackage.id() + "#" + npmPackage.version();
+        return packageManager.loadPackage(packageId);
     }
-
-
 }
 
 
