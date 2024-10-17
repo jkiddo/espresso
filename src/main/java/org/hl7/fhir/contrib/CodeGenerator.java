@@ -3,9 +3,8 @@ package org.hl7.fhir.contrib;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.FhirVersionEnum;
 import org.hl7.fhir.instance.model.api.IPrimitiveType;
-import org.hl7.fhir.r4.context.SimpleWorkerContext;
-import org.hl7.fhir.r4.profilemodel.gen.PECodeGenerator;
 import org.hl7.fhir.utilities.npm.NpmPackage;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +20,8 @@ public class CodeGenerator {
     private final String packageName;
     private final List<String> profilesWhitelist;
     private final Path path;
-    private final SimpleWorkerContext workerContext;
+    private final Object workerContext;
+    private final FhirVersionEnum fhirVersion;
 
     public CodeGenerator(NpmPackage npmPackage, String outputFolder, String packageName, List<String> profiles) throws Exception {
         var fhirContext = new FhirContext(FhirVersionEnum.forVersionString(npmPackage.fhirVersion()));
@@ -44,20 +44,21 @@ public class CodeGenerator {
             profilesWhitelist.addAll(allProfiles);
         }
 
-        FhirVersionEnum fhirVersion = fhirContext.getVersion().getVersion();
+        fhirVersion = fhirContext.getVersion().getVersion();
         Path path = Path.of(outputFolder, packageName.replaceAll("\\.", "/"));
 
         if (!Files.exists(path)) Files.createDirectories(path);
         this.path = path;
 
-        this.workerContext = SimpleWorkerContext.fromPackage(npmPackage);
 
         switch (fhirVersion) {
             case R4:
-                workerContext.loadFromFolder("src/main/resources/r4/definitions.json");
+                this.workerContext = org.hl7.fhir.r4.context.SimpleWorkerContext.fromPackage(npmPackage);
+                ((org.hl7.fhir.r4.context.SimpleWorkerContext) workerContext).loadFromFolder("src/main/resources/r4/definitions.json");
                 break;
             case R5:
-                workerContext.loadFromFolder("src/main/resources/r5/definitions.json");
+                this.workerContext = new org.hl7.fhir.r5.context.SimpleWorkerContext.SimpleWorkerContextBuilder().fromPackage(npmPackage);
+                ((org.hl7.fhir.r5.context.SimpleWorkerContext) workerContext).loadFromFolder("src/main/resources/r5/definitions.json");
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported FHIR version: " + fhirVersion);
@@ -67,30 +68,59 @@ public class CodeGenerator {
 
     public void generateCode() {
 
-        logger.info("Starting code generation...");
+        logger.info("Starting code generation on " + profilesWhitelist.size() + " profiles ...");
         String date = new Date().toString();
         for (var p : profilesWhitelist) {
-
-            PECodeGenerator codeGenerator = new PECodeGenerator(workerContext);
-            codeGenerator.setFolder(path.toString());
-            codeGenerator.setCanonical(p);
-            codeGenerator.setPkgName(packageName);
-            codeGenerator.setExtensionPolicy(PECodeGenerator.ExtensionPolicy.Complexes);
-            codeGenerator.setNarrative(true);
-            codeGenerator.setMeta(true);
-            codeGenerator.setLanguage(null);
-            codeGenerator.setKeyElementsOnly(true);
-            codeGenerator.setGenDate(date);
-
             logger.info("Generating code for profile: {}", p);
-            try {
-                codeGenerator.execute();
-            } catch (Exception e) {
-                logger.error("Error generating code for profile: {}", p, e);
+            switch (fhirVersion) {
+                case R4:
+                    try {
+                        getR4PeCodeGenerator(p, date).execute();
+                    } catch (Exception e) {
+                        logger.error("Error generating code for profile: {}", p, e);
+                    }
+                    break;
+                case R5:
+                    try {
+                        getR5PeCodeGenerator(p, date).execute();
+                    } catch (Exception e) {
+                        logger.error("Error generating code for profile: {}", p, e);
+                    }
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported FHIR version: " + fhirVersion);
             }
         }
         logger.info("Code generation completed.");
 
         System.exit(0);
+    }
+
+    private @NotNull org.hl7.fhir.r5.profilemodel.gen.PECodeGenerator getR5PeCodeGenerator(String p, String date) {
+        org.hl7.fhir.r5.profilemodel.gen.PECodeGenerator codeGenerator = new org.hl7.fhir.r5.profilemodel.gen.PECodeGenerator((org.hl7.fhir.r5.context.IWorkerContext) workerContext);
+        codeGenerator.setFolder(path.toString());
+        codeGenerator.setCanonical(p);
+        codeGenerator.setPkgName(packageName);
+        codeGenerator.setExtensionPolicy(org.hl7.fhir.r5.profilemodel.gen.PECodeGenerator.ExtensionPolicy.Complexes);
+        codeGenerator.setNarrative(true);
+        codeGenerator.setMeta(true);
+        codeGenerator.setLanguage(null);
+        codeGenerator.setKeyElementsOnly(true);
+        codeGenerator.setGenDate(date);
+        return codeGenerator;
+    }
+
+    private @NotNull org.hl7.fhir.r4.profilemodel.gen.PECodeGenerator getR4PeCodeGenerator(String p, String date) {
+        org.hl7.fhir.r4.profilemodel.gen.PECodeGenerator codeGenerator = new org.hl7.fhir.r4.profilemodel.gen.PECodeGenerator((org.hl7.fhir.r4.context.IWorkerContext) workerContext);
+        codeGenerator.setFolder(path.toString());
+        codeGenerator.setCanonical(p);
+        codeGenerator.setPkgName(packageName);
+        codeGenerator.setExtensionPolicy(org.hl7.fhir.r4.profilemodel.gen.PECodeGenerator.ExtensionPolicy.Complexes);
+        codeGenerator.setNarrative(true);
+        codeGenerator.setMeta(true);
+        codeGenerator.setLanguage(null);
+        codeGenerator.setKeyElementsOnly(true);
+        codeGenerator.setGenDate(date);
+        return codeGenerator;
     }
 }
