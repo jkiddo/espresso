@@ -1,16 +1,15 @@
 package org.hl7.fhir.contrib;
 
+import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.FhirVersionEnum;
-
-
+import org.hl7.fhir.instance.model.api.IPrimitiveType;
 import org.hl7.fhir.r4.context.SimpleWorkerContext;
 import org.hl7.fhir.r4.profilemodel.gen.PECodeGenerator;
 import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
@@ -18,36 +17,39 @@ import java.util.List;
 
 public class CodeGenerator {
 
-    private static Logger logger = LoggerFactory.getLogger(CodeGenerator.class);
-    private final InputStream packageAsInputStream;
+    private static final Logger logger = LoggerFactory.getLogger(CodeGenerator.class);
     private final String packageName;
-    private final FhirVersionEnum fhirVersion;
-    private final List<String> profiles;
+    private final List<String> profilesWhitelist;
     private final Path path;
     private final SimpleWorkerContext workerContext;
 
-    public static void main(String[] args) throws Exception {
+    public CodeGenerator(NpmPackage npmPackage, String outputFolder, String packageName, List<String> profiles) throws Exception {
+        var fhirContext = new FhirContext(FhirVersionEnum.forVersionString(npmPackage.fhirVersion()));
 
-        //var pathToPackage = "src/main/resources/package.tgz";
-        var packageAsInputStream = new ClassPathResource("package.tgz").getInputStream();
-        var outputFolder = "target/generated-sources/java";
-        var packageName = "org.hl7.fhir.example.generated";
-        var fhirVersion = FhirVersionEnum.R4;
-        var profiles = List.of("http://hl7.dk/fhir/core/StructureDefinition/dk-core-cpr-identifier", "http://hl7.dk/fhir/core/StructureDefinition/dk-core-gln-identifier");
-        new CodeGenerator(packageAsInputStream, outputFolder, packageName, fhirVersion, profiles).generateCode();
-    }
-
-    public CodeGenerator(InputStream packageAsInputStream, String outputFolder, String packageName, FhirVersionEnum fhirVersion, List<String> profiles) throws Exception {
-        this.packageAsInputStream = packageAsInputStream;
         this.packageName = packageName;
-        this.fhirVersion = fhirVersion;
-        this.profiles = profiles;
+        this.profilesWhitelist = profiles;
 
+        if (profilesWhitelist.isEmpty()) {
+            var fhirPath = fhirContext.newFhirPath();
+            var parsedExpression = fhirPath.parse("url");
+            var folder = npmPackage.getFolders().get("package");
+            var structureDefs = folder.getTypes().get("StructureDefinition");
+            var allProfiles = structureDefs.stream().map(sd -> {
+                try {
+                    return folder.fetchFile(sd);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }).map(bytes -> fhirContext.newJsonParser().setSuppressNarratives(true).parseResource(new String(bytes))).map(b -> (String) fhirPath.evaluate(b, parsedExpression, IPrimitiveType.class).get(0).getValue()).toList();
+            profilesWhitelist.addAll(allProfiles);
+        }
+
+        FhirVersionEnum fhirVersion = fhirContext.getVersion().getVersion();
         Path path = Path.of(outputFolder, packageName.replaceAll("\\.", "/"));
+
         if (!Files.exists(path)) Files.createDirectories(path);
         this.path = path;
 
-        var npmPackage = NpmPackage.fromPackage(packageAsInputStream);
         this.workerContext = SimpleWorkerContext.fromPackage(npmPackage);
 
         switch (fhirVersion) {
@@ -66,7 +68,8 @@ public class CodeGenerator {
     public void generateCode() {
 
         logger.info("Starting code generation...");
-        for (var p : profiles) {
+        String date = new Date().toString();
+        for (var p : profilesWhitelist) {
 
             PECodeGenerator codeGenerator = new PECodeGenerator(workerContext);
             codeGenerator.setFolder(path.toString());
@@ -77,7 +80,7 @@ public class CodeGenerator {
             codeGenerator.setMeta(true);
             codeGenerator.setLanguage(null);
             codeGenerator.setKeyElementsOnly(true);
-            codeGenerator.setGenDate(new Date().toString());
+            codeGenerator.setGenDate(date);
 
             logger.info("Generating code for profile: {}", p);
             try {
@@ -89,5 +92,3 @@ public class CodeGenerator {
         logger.info("Code generation completed.");
     }
 }
-
-
