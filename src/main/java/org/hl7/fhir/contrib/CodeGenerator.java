@@ -90,5 +90,7 @@ public class CodeGenerator {
             }
         }
         logger.info("Code generation completed.");
+
+        System.exit(0);
     }
 }
