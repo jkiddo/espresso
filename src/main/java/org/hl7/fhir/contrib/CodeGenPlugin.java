@@ -17,7 +17,7 @@ public class CodeGenPlugin extends AbstractMojo {
 
     public static final String PLUGIN_NAME = "fhir-codegen-maven-plugin";
 
-    @Parameter(property = "generate.package")
+    @Parameter(property = "generate.package", required = true)
     private String packagePath;
 
     @Parameter(property = "generate.outputFolder", defaultValue = "target/generated-sources/java" )
