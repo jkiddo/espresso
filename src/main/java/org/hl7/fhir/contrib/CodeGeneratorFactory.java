@@ -53,19 +53,16 @@ public class CodeGeneratorFactory {
 
     }
 
-    public PECodeGenerator produceCodeGenerator() throws Exception {
+    PECodeGenerator produceCodeGenerator() throws Exception {
 
-        switch (fhirVersion) {
-            case R4:
-                return new R4PECodeGenerator(npmPackage, profilesWhitelist);
-            case R5:
-                return new R5PECodeGenerator(npmPackage, profilesWhitelist);
-            default:
-                throw new IllegalArgumentException("Unsupported FHIR version: " + fhirVersion);
-        }
+        return switch (fhirVersion) {
+            case R4 -> new R4PECodeGenerator(npmPackage, profilesWhitelist);
+            case R5 -> new R5PECodeGenerator(npmPackage, profilesWhitelist);
+            default -> throw new IllegalArgumentException("Unsupported FHIR version: " + fhirVersion);
+        };
     }
 
-    abstract class PECodeGenerator {
+    abstract static class PECodeGenerator {
         private final List<String> profilesWhitelist;
         private final String date;
 
@@ -73,8 +70,9 @@ public class CodeGeneratorFactory {
             this.profilesWhitelist = canonicals;
             this.date = new Date().toString();
         }
+
         void generate() {
-            logger.info("Starting code generation on " + profilesWhitelist.size() + " profiles ...");
+            logger.info("Starting code generation on {} profiles ...", profilesWhitelist.size());
 
             for (var canonicalUrl : profilesWhitelist) {
                 logger.info("Generating code for profile: {}", canonicalUrl);
@@ -89,6 +87,7 @@ public class CodeGeneratorFactory {
 
             System.exit(0);
         }
+
         abstract protected void generateCode(String canonicalUrl, String date) throws IOException;
     }
 
@@ -100,6 +99,7 @@ public class CodeGeneratorFactory {
             super(profilesWhitelist);
             this.workerContext = org.hl7.fhir.r4.context.SimpleWorkerContext.fromPackage(npmPackage);
             workerContext.loadFromFolder("src/main/resources/r4/definitions.json");
+            workerContext.setExpansionProfile(new org.hl7.fhir.r4.model.Parameters());
         }
 
         @Override
@@ -136,6 +136,7 @@ public class CodeGeneratorFactory {
         codeGenerator.setLanguage(null);
         codeGenerator.setKeyElementsOnly(true);
         codeGenerator.setGenDate(date);
+        codeGenerator.setVersion("r5");
         return codeGenerator;
     }
 
@@ -150,6 +151,7 @@ public class CodeGeneratorFactory {
         codeGenerator.setLanguage(null);
         codeGenerator.setKeyElementsOnly(true);
         codeGenerator.setGenDate(date);
+        codeGenerator.setVersion("r4");
         return codeGenerator;
     }
 }
