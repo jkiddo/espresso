@@ -41,21 +41,8 @@ public class Application implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-
-        NpmPackage npmPackage = validatePackage();
-        CodeGeneratorFactory.PECodeGenerator generator = new CodeGeneratorFactory(npmPackage, outputFolder, packageName, profiles).produceCodeGenerator();
+        CodeGeneratorFactory.PECodeGenerator generator = new CodeGeneratorFactory(packagePath, outputFolder, packageName, profiles).produceCodeGenerator();
         generator.generate();
-
-    }
-
-    private NpmPackage validatePackage() throws IOException {
-
-        var packageManager = new FilesystemPackageCacheManager.Builder().build();
-        var npmAsBytes = new PackageLoaderSvc().loadPackageUrlContents(packagePath);
-        var npmPackage = NpmPackage.fromPackage(new ByteArrayInputStream(npmAsBytes));
-        packageManager.addPackageToCache(npmPackage.id(), npmPackage.version(), new ByteArrayInputStream(npmAsBytes), npmPackage.description());
-        var packageId = npmPackage.id() + "#" + npmPackage.version();
-        return packageManager.loadPackage(packageId);
     }
 }
 

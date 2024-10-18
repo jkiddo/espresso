@@ -2,12 +2,15 @@ package org.hl7.fhir.contrib;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.FhirVersionEnum;
+import ca.uhn.fhir.jpa.packages.loader.PackageLoaderSvc;
 import org.hl7.fhir.instance.model.api.IPrimitiveType;
+import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
 import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,8 +26,9 @@ public class CodeGeneratorFactory {
     private final FhirVersionEnum fhirVersion;
     private final NpmPackage npmPackage;
 
-    public CodeGeneratorFactory(NpmPackage npmPackage, String outputFolder, String packageName, List<String> profiles) throws Exception {
-        this.npmPackage = npmPackage;
+    public CodeGeneratorFactory(String packageId, String outputFolder, String packageName, List<String> profiles) throws Exception {
+
+        this.npmPackage = validatePackage(packageId);
         var fhirContext = new FhirContext(FhirVersionEnum.forVersionString(npmPackage.fhirVersion()));
 
         this.packageName = packageName;
@@ -51,6 +55,16 @@ public class CodeGeneratorFactory {
         if (!Files.exists(path)) Files.createDirectories(path);
         this.path = path;
 
+    }
+
+    public static NpmPackage validatePackage(String packagePath) throws IOException {
+
+        var packageManager = new FilesystemPackageCacheManager.Builder().build();
+        var npmAsBytes = new PackageLoaderSvc().loadPackageUrlContents(packagePath);
+        var npmPackage = NpmPackage.fromPackage(new ByteArrayInputStream(npmAsBytes));
+        packageManager.addPackageToCache(npmPackage.id(), npmPackage.version(), new ByteArrayInputStream(npmAsBytes), npmPackage.description());
+        var packageId = npmPackage.id() + "#" + npmPackage.version();
+        return packageManager.loadPackage(packageId);
     }
 
     PECodeGenerator produceCodeGenerator() throws Exception {
@@ -84,8 +98,6 @@ public class CodeGeneratorFactory {
             }
 
             logger.info("Code generation completed.");
-
-            System.exit(0);
         }
 
         abstract protected void generateCode(String canonicalUrl, String date) throws IOException;
