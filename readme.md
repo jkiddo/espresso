@@ -1,4 +1,5 @@
-# Maven plugin for FHIR profile specific resources 
+# what?
+Maven plugin for FHIR profile specific resources 
 
 # Build
 ... the core projects on https://github.com/hapifhir/org.hl7.fhir.core
