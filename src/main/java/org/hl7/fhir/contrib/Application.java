@@ -43,7 +43,10 @@ public class Application implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
 
         NpmPackage npmPackage = validatePackage();
-        new CodeGenerator(npmPackage, outputFolder, packageName, profiles).generateCode();
+        CodeGeneratorFactory.PECodeGenerator generator = new CodeGeneratorFactory(npmPackage, outputFolder, packageName, profiles).produceCodeGenerator();
+        generator.generate();
+
+
     }
 
     private NpmPackage validatePackage() throws IOException {
