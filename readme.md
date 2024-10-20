@@ -1,6 +1,6 @@
 # Project espresso
 
-This project is a proof of concept for generating Java classes from FHIR profiles using the HAPI FHIR library.
+This project is a proof of concept for generating Java classes from FHIR profiles using the HAPI FHIR library as a Maven plugin.
 
 ## Usage as Maven plugin
 
