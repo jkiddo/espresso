@@ -2,9 +2,32 @@
 
 This project is a proof of concept for generating Java classes from FHIR profiles using the HAPI FHIR library.
 
-## Getting started
+## Usage as Maven plugin
 
-TBD
+```xml
+<build>
+        <plugins>
+            <plugin>
+                <groupId>org.hl7.fhir.contrib</groupId>
+                <artifactId>fhir-codegen-maven-plugin</artifactId>
+                <version>1.0-SNAPSHOT</version>
+                <configuration>
+                    <packageName>test.packages</packageName>
+                    <packagePath>https://hl7.dk/fhir/core/package.tgz</packagePath>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+```
 
 #### Build the core projects on https://github.com/hapifhir/org.hl7.fhir.core
 
@@ -56,3 +79,4 @@ public class Application implements ApplicationRunner {
     }
 }
 ```
+
