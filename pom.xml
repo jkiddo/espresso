@@ -6,8 +6,11 @@
     <packaging>maven-plugin</packaging>
     <version>1.0-SNAPSHOT</version>
     <name>FHIR Codegen Maven Plugin</name>
-    <url>http://maven.apache.org</url>
+    <url>https://github.com/jkiddo/espresso</url>
     <properties>
+        <java.version>17</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <hapi_version>7.4.4</hapi_version>
         <core_version>6.3.33-SNAPSHOT</core_version>
         <maven-plugin-tools.version>3.15.0</maven-plugin-tools.version>
@@ -127,8 +130,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <source>16</source>
-                    <target>16</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
         </plugins>
