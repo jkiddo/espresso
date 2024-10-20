@@ -7,10 +7,10 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 // https://maven.apache.org/guides/plugin/guide-java-plugin-development.html
-
 
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class CodeGenPlugin extends AbstractMojo {
@@ -21,17 +21,17 @@ public class CodeGenPlugin extends AbstractMojo {
     private String packagePath;
 
     @Parameter(property = "generate.outputFolder", defaultValue = "target/generated-sources/java" )
-    private String outputFolder;
+    private String outputFolder = "target/generated-sources/java";
 
     @Parameter(property = "generate.packageName", defaultValue = "org.hl7.fhir.example.generated" )
-    private String packageName;
+    private String packageName = "org.hl7.fhir.example.generated";
 
     @Parameter(property = "generate.profiles")
     public void setProfiles(String[] profiles) {
 
-        this.profiles = Arrays.stream(profiles).toList();
+        this.profiles = Arrays.stream(profiles).collect(Collectors.toUnmodifiableSet());
     }
-    private List<String> profiles;
+    private Set<String> profiles;
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -42,4 +42,5 @@ public class CodeGenPlugin extends AbstractMojo {
             throw new MojoExecutionException("Failed to generate code", e);
         }
     }
+
 }
