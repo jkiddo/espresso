@@ -21,10 +21,10 @@ public class CodeGenPlugin extends AbstractMojo {
     private String packagePath;
 
     @Parameter(property = "generate.outputFolder", defaultValue = "target/generated-sources/java" )
-    private String outputFolder;
+    private String outputFolder = "target/generated-sources/java";
 
     @Parameter(property = "generate.packageName", defaultValue = "org.hl7.fhir.example.generated" )
-    private String packageName;
+    private String packageName = "org.hl7.fhir.example.generated";
 
     @Parameter(property = "generate.profiles")
     public void setProfiles(String[] profiles) {
@@ -42,4 +42,5 @@ public class CodeGenPlugin extends AbstractMojo {
             throw new MojoExecutionException("Failed to generate code", e);
         }
     }
+
 }

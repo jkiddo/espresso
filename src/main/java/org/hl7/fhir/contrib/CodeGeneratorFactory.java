@@ -7,6 +7,7 @@ import org.hl7.fhir.instance.model.api.IPrimitiveType;
 import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
 import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 public class CodeGeneratorFactory {
 
@@ -26,13 +28,20 @@ public class CodeGeneratorFactory {
     private final FhirVersionEnum fhirVersion;
     private final NpmPackage npmPackage;
 
-    public CodeGeneratorFactory(String packageId, String outputFolder, String packageName, List<String> profiles) throws Exception {
+    /**
+     * @param packageId    The package id to generate code from
+     * @param outputFolder The output folder for the generated code
+     * @param packageName  The package name for the generated code
+     * @param profiles     The profiles to generate code for
+     * @throws Exception if any
+     */
+    public CodeGeneratorFactory(@NotNull String packageId, @NotNull String outputFolder, @NotNull String packageName, @Nullable List<String> profiles) throws Exception {
 
         this.npmPackage = validatePackage(packageId);
         var fhirContext = new FhirContext(FhirVersionEnum.forVersionString(npmPackage.fhirVersion()));
 
         this.packageName = packageName;
-        this.profilesWhitelist = profiles;
+        this.profilesWhitelist = Objects.requireNonNullElseGet(profiles, List::of);
 
         if (profilesWhitelist.isEmpty()) {
             var fhirPath = fhirContext.newFhirPath();
@@ -85,6 +94,9 @@ public class CodeGeneratorFactory {
             this.date = new Date().toString();
         }
 
+        /**
+         * Generate code for the profiles in the whitelist
+         */
         void generate() {
             logger.info("Starting code generation on {} profiles ...", profilesWhitelist.size());
 
