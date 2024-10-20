@@ -13,7 +13,7 @@ This project is a proof of concept for generating Java classes from FHIR profile
                 <version>1.0-SNAPSHOT</version>
                 <configuration>
                     <packageName>test.packages</packageName>
-                    <packagePath>https://hl7.dk/fhir/core/package.tgz</packagePath>
+                    <packageId>https://hl7.dk/fhir/core/package.tgz</packageId>
                 </configuration>
                 <executions>
                     <execution>
