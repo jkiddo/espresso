@@ -16,14 +16,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CodeGeneratorFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(CodeGeneratorFactory.class);
     private final String packageName;
-    private final List<String> profilesWhitelist;
+    private final Set<String> profilesWhitelist;
     private final Path path;
     private final FhirVersionEnum fhirVersion;
     private final NpmPackage npmPackage;
@@ -35,27 +35,29 @@ public class CodeGeneratorFactory {
      * @param profiles     The profiles to generate code for
      * @throws Exception if any
      */
-    public CodeGeneratorFactory(@NotNull String packageId, @NotNull String outputFolder, @NotNull String packageName, @Nullable List<String> profiles) throws Exception {
+    public CodeGeneratorFactory(@NotNull String packageId, @NotNull String outputFolder, @NotNull String packageName, @Nullable Set<String> profiles) throws Exception {
 
         this.npmPackage = validatePackage(packageId);
         var fhirContext = new FhirContext(FhirVersionEnum.forVersionString(npmPackage.fhirVersion()));
 
         this.packageName = packageName;
-        this.profilesWhitelist = Objects.requireNonNullElseGet(profiles, List::of);
 
-        if (profilesWhitelist.isEmpty()) {
+        if (profiles == null || profiles.isEmpty()) {
+
             var fhirPath = fhirContext.newFhirPath();
             var parsedExpression = fhirPath.parse("url");
             var folder = npmPackage.getFolders().get("package");
             var structureDefs = folder.getTypes().get("StructureDefinition");
-            var allProfiles = structureDefs.stream().map(sd -> {
+            this.profilesWhitelist = structureDefs.stream().map(sd -> {
                 try {
                     return folder.fetchFile(sd);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-            }).map(bytes -> fhirContext.newJsonParser().setSuppressNarratives(true).parseResource(new String(bytes))).map(b -> (String) fhirPath.evaluate(b, parsedExpression, IPrimitiveType.class).get(0).getValue()).toList();
-            profilesWhitelist.addAll(allProfiles);
+            }).map(bytes -> fhirContext.newJsonParser().setSuppressNarratives(true).parseResource(new String(bytes))).map(b -> (String) fhirPath.evaluate(b, parsedExpression, IPrimitiveType.class).get(0).getValue()).collect(Collectors.toUnmodifiableSet());
+
+        } else {
+            this.profilesWhitelist = Set.copyOf(profiles);;
         }
 
         fhirVersion = fhirContext.getVersion().getVersion();
@@ -86,10 +88,10 @@ public class CodeGeneratorFactory {
     }
 
     abstract static class PECodeGenerator {
-        private final List<String> profilesWhitelist;
+        private final Set<String> profilesWhitelist;
         private final String date;
 
-        public PECodeGenerator(List<String> canonicals) {
+        public PECodeGenerator(Set<String> canonicals) {
             this.profilesWhitelist = canonicals;
             this.date = new Date().toString();
         }
@@ -119,7 +121,7 @@ public class CodeGeneratorFactory {
 
         private final org.hl7.fhir.r4.context.SimpleWorkerContext workerContext;
 
-        R4PECodeGenerator(NpmPackage npmPackage, List<String> profilesWhitelist) throws Exception {
+        R4PECodeGenerator(NpmPackage npmPackage, Set<String> profilesWhitelist) throws Exception {
             super(profilesWhitelist);
             this.workerContext = org.hl7.fhir.r4.context.SimpleWorkerContext.fromPackage(npmPackage);
             workerContext.loadFromFolder("src/main/resources/r4/definitions.json");
@@ -136,7 +138,7 @@ public class CodeGeneratorFactory {
 
         private final org.hl7.fhir.r5.context.SimpleWorkerContext workerContext;
 
-        R5PECodeGenerator(NpmPackage npmPackage, List<String> profilesWhitelist) throws IOException {
+        R5PECodeGenerator(NpmPackage npmPackage, Set<String> profilesWhitelist) throws IOException {
             super(profilesWhitelist);
             this.workerContext = new org.hl7.fhir.r5.context.SimpleWorkerContext.SimpleWorkerContextBuilder().fromPackage(npmPackage);
             workerContext.loadFromFolder("src/main/resources/r5/definitions.json");
