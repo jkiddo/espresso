@@ -17,8 +17,8 @@ public class CodeGenPlugin extends AbstractMojo {
 
     public static final String PLUGIN_NAME = "fhir-codegen-maven-plugin";
 
-    @Parameter(property = "generate.package", required = true)
-    private String packagePath;
+    @Parameter(property = "generate.packageId", required = true)
+    private String packageId;
 
     @Parameter(property = "generate.outputFolder", defaultValue = "target/generated-sources/java" )
     private String outputFolder = "target/generated-sources/java";
@@ -36,7 +36,7 @@ public class CodeGenPlugin extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException {
         try {
-            CodeGeneratorFactory.PECodeGenerator generator = new CodeGeneratorFactory(packagePath, outputFolder, packageName, profiles).produceCodeGenerator();
+            CodeGeneratorFactory.PECodeGenerator generator = new CodeGeneratorFactory(packageId, outputFolder, packageName, profiles).produceCodeGenerator();
             generator.generate();
         } catch (Exception e) {
             throw new MojoExecutionException("Failed to generate code", e);
