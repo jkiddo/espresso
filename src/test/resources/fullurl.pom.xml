@@ -7,11 +7,6 @@
     <version>1.0-SNAPSHOT</version>
     <name>FHIR Codegen Maven Plugin</name>
     <url>http://maven.apache.org</url>
-    <properties>
-        <hapi_version>7.4.3</hapi_version>
-        <core_version>6.3.33-SNAPSHOT</core_version>
-        <maven-plugin-tools.version>3.15.0</maven-plugin-tools.version>
-    </properties>
 
 
     <build>
@@ -21,8 +16,7 @@
                 <artifactId>fhir-codegen-maven-plugin</artifactId>
                 <version>1.0-SNAPSHOT</version>
                 <configuration>
-                    <packageName>test.packages</packageName>
-                    <packageId>https://hl7.dk/fhir/core/package.tgz</packageId>
+                    <packageId>http://hl7.dk/fhir/core/3.2.0/package.tgz</packageId>
                 </configuration>
                 <executions>
                     <execution>

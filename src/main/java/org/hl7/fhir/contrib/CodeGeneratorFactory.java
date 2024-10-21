@@ -3,6 +3,7 @@ package org.hl7.fhir.contrib;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.jpa.packages.loader.PackageLoaderSvc;
+import com.google.common.base.Strings;
 import org.hl7.fhir.instance.model.api.IPrimitiveType;
 import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
 import org.hl7.fhir.utilities.npm.NpmPackage;
@@ -11,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.DefaultResourceLoader;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -74,11 +76,13 @@ public class CodeGeneratorFactory {
     public static NpmPackage validatePackage(String packagePath) throws IOException {
 
         var packageManager = new FilesystemPackageCacheManager.Builder().build();
+        if (!Strings.isNullOrEmpty(packagePath) && !packagePath.startsWith("http:") && !packagePath.startsWith("https:") && !packagePath.startsWith("classpath:") && !packagePath.startsWith("file:") && !packagePath.startsWith("/"))
+            return packageManager.loadPackage(packagePath);
+
         var npmAsBytes = new PackageLoaderSvc().loadPackageUrlContents(packagePath);
         var npmPackage = NpmPackage.fromPackage(new ByteArrayInputStream(npmAsBytes));
         packageManager.addPackageToCache(npmPackage.id(), npmPackage.version(), new ByteArrayInputStream(npmAsBytes), npmPackage.description());
-        var packageId = npmPackage.id() + "#" + npmPackage.version();
-        return packageManager.loadPackage(packageId);
+        return packageManager.loadPackage(npmPackage.id() + "#" + npmPackage.version());
     }
 
     public PECodeGenerator produceCodeGenerator() throws Exception {
@@ -141,14 +145,14 @@ public class CodeGeneratorFactory {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 if (entry.getName().endsWith(".json")) {
-                    var c = (org.hl7.fhir.r4.model.Resource) parser.parseResource(new String(zis.readAllBytes()));
+                    var resource = (org.hl7.fhir.r4.model.Resource) parser.parseResource(new String(zis.readAllBytes()));
                     try {
-                        if (c.getResourceType() == org.hl7.fhir.r4.model.ResourceType.Bundle) {
-                            for (org.hl7.fhir.r4.model.Bundle.BundleEntryComponent e : ((org.hl7.fhir.r4.model.Bundle) c).getEntry()) {
+                        if (resource.getResourceType() == org.hl7.fhir.r4.model.ResourceType.Bundle) {
+                            for (org.hl7.fhir.r4.model.Bundle.BundleEntryComponent e : ((org.hl7.fhir.r4.model.Bundle) resource).getEntry()) {
                                 workerContext.cacheResource(e.getResource());
                             }
                         } else {
-                            workerContext.cacheResource(c);
+                            workerContext.cacheResource(resource);
                         }
                     } catch (Exception e) {
                         logger.debug("Error loading definitions", e);
@@ -181,14 +185,14 @@ public class CodeGeneratorFactory {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 if (entry.getName().endsWith(".json")) {
-                    var c = (org.hl7.fhir.r5.model.Resource) parser.parseResource(new String(zis.readAllBytes()));
+                    var resource = (org.hl7.fhir.r5.model.Resource) parser.parseResource(new String(zis.readAllBytes()));
                     try {
-                        if (c.getResourceType() == org.hl7.fhir.r5.model.ResourceType.Bundle) {
-                            for (org.hl7.fhir.r5.model.Bundle.BundleEntryComponent e : ((org.hl7.fhir.r5.model.Bundle) c).getEntry()) {
+                        if (resource.getResourceType() == org.hl7.fhir.r5.model.ResourceType.Bundle) {
+                            for (org.hl7.fhir.r5.model.Bundle.BundleEntryComponent e : ((org.hl7.fhir.r5.model.Bundle) resource).getEntry()) {
                                 workerContext.cacheResource(e.getResource());
                             }
                         } else {
-                            workerContext.cacheResource(c);
+                            workerContext.cacheResource(resource);
                         }
                     } catch (Exception e) {
                         logger.debug("Error loading definitions", e);
