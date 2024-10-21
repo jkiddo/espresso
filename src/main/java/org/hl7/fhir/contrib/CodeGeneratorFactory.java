@@ -31,6 +31,7 @@ public class CodeGeneratorFactory {
     private final Path path;
     private final FhirVersionEnum fhirVersion;
     private final NpmPackage npmPackage;
+    private final @NotNull String outputFolder;
 
     /**
      * @param packageId    The package id to generate code from
@@ -45,6 +46,7 @@ public class CodeGeneratorFactory {
         var fhirContext = new FhirContext(FhirVersionEnum.forVersionString(npmPackage.fhirVersion()));
 
         this.packageName = packageName;
+        this.outputFolder = outputFolder;
 
         if (profiles == null || profiles.isEmpty()) {
 
@@ -62,10 +64,10 @@ public class CodeGeneratorFactory {
 
         } else {
             this.profilesWhitelist = Set.copyOf(profiles);
-            ;
         }
 
         fhirVersion = fhirContext.getVersion().getVersion();
+
         Path path = Path.of(outputFolder, packageName.replaceAll("\\.", "/"));
 
         if (!Files.exists(path)) Files.createDirectories(path);
@@ -94,12 +96,14 @@ public class CodeGeneratorFactory {
         };
     }
 
-    public abstract static class PECodeGenerator {
+    public abstract class PECodeGenerator {
         private final Set<String> profilesWhitelist;
         private final String date;
+        protected final NpmPackage npmPackage;
 
-        public PECodeGenerator(Set<String> canonicals) {
+        public PECodeGenerator(Set<String> canonicals, NpmPackage npmPackage) {
             this.profilesWhitelist = canonicals;
+            this.npmPackage = npmPackage;
             this.date = new Date().toString();
         }
 
@@ -107,6 +111,7 @@ public class CodeGeneratorFactory {
          * Generate code for the profiles in the whitelist
          */
         public void generate() {
+
             logger.info("Starting code generation on {} profiles ...", profilesWhitelist.size());
 
             for (var canonicalUrl : profilesWhitelist) {
@@ -119,6 +124,7 @@ public class CodeGeneratorFactory {
             }
 
             logger.info("Code generation completed.");
+            logger.info("validator cli equivalent: java -jar validator_cli.jar -codegen -version {} -ig {}#{} -output {} -package-name {} -profiles {}", npmPackage.fhirVersion(), npmPackage.id(), npmPackage.version(), outputFolder, packageName, profilesWhitelist.stream().map(e -> e.replace("/StructureDefinition/","/StructureDefinition-")).collect(Collectors.joining(",")));
         }
 
         abstract protected void generateCode(String canonicalUrl, String date) throws IOException;
@@ -129,10 +135,8 @@ public class CodeGeneratorFactory {
         private final org.hl7.fhir.r4.context.SimpleWorkerContext workerContext;
 
         R4PECodeGenerator(NpmPackage npmPackage, Set<String> profilesWhitelist) throws Exception {
-            super(profilesWhitelist);
-            this.workerContext = org.hl7.fhir.r4.context.SimpleWorkerContext.fromPackage(npmPackage);
-
-            //workerContext.loadFromFolder("src/main/resources/r4/definitions.json");
+            super(profilesWhitelist, npmPackage);
+            this.workerContext = org.hl7.fhir.r4.context.SimpleWorkerContext.fromPackage(this.npmPackage);
             loadDefinitions();
             workerContext.setExpansionProfile(new org.hl7.fhir.r4.model.Parameters());
         }
@@ -171,10 +175,10 @@ public class CodeGeneratorFactory {
 
         private final org.hl7.fhir.r5.context.SimpleWorkerContext workerContext;
 
+
         R5PECodeGenerator(NpmPackage npmPackage, Set<String> profilesWhitelist) throws IOException {
-            super(profilesWhitelist);
+            super(profilesWhitelist, npmPackage);
             this.workerContext = new org.hl7.fhir.r5.context.SimpleWorkerContext.SimpleWorkerContextBuilder().fromPackage(npmPackage);
-            //workerContext.loadFromFolder("src/main/resources/r5/definitions.json");
             loadDefinitions();
         }
 
