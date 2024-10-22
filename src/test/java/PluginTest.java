@@ -1,11 +1,13 @@
+import ca.uhn.fhir.jpa.packages.loader.PackageLoaderSvc;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.hl7.fhir.contrib.CodeGenPlugin;
+import org.hl7.fhir.r5.context.SimpleWorkerContext;
+import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
+import org.hl7.fhir.utilities.npm.NpmPackage;
 
-import java.io.File;
-import java.nio.file.Files;
+import java.io.*;
 import java.nio.file.Path;
-import java.util.Comparator;
 
 public class PluginTest extends AbstractMojoTestCase {
 
@@ -25,7 +27,6 @@ public class PluginTest extends AbstractMojoTestCase {
         FileUtils.deleteDirectory(Path.of(getBasedir(), "target/generated-sources/java").toFile());
     }
 
-
     /**
      * @throws Exception
      */
@@ -44,5 +45,15 @@ public class PluginTest extends AbstractMojoTestCase {
 
     private void run(File pomFile) throws Exception {
         ((CodeGenPlugin) lookupMojo("generate", pomFile)).execute();
+    }
+
+    private org.hl7.fhir.r4.context.SimpleWorkerContext createWorkerContextR4Example() throws IOException {
+        return org.hl7.fhir.r4.context.SimpleWorkerContext.fromPackage(new FilesystemPackageCacheManager.Builder().build().loadPackage("hl7.fhir.dk.core", "3.2.0"));
+    }
+
+    private org.hl7.fhir.r5.context.SimpleWorkerContext createWorkerContextR5Example() throws IOException {
+        var npmAsBytes = new PackageLoaderSvc().loadPackageUrlContents("https://build.fhir.org/ig/hl7-eu/gravitate-health/toc.html");
+        var npmPackage = NpmPackage.fromPackage(new ByteArrayInputStream(npmAsBytes));
+        return new SimpleWorkerContext.SimpleWorkerContextBuilder().fromPackage(npmPackage);
     }
 }

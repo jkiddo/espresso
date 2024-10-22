@@ -180,6 +180,7 @@ public class CodeGeneratorFactory {
             super(profilesWhitelist, npmPackage);
             this.workerContext = new org.hl7.fhir.r5.context.SimpleWorkerContext.SimpleWorkerContextBuilder().fromPackage(npmPackage);
             loadDefinitions();
+            workerContext.setExpansionParameters(new org.hl7.fhir.r5.model.Parameters());
         }
 
         private void loadDefinitions() throws IOException {
