@@ -31,16 +31,20 @@ public class PluginTest extends AbstractMojoTestCase {
      * @throws Exception
      */
 
-    public void testDefaultMojoGoal() throws Exception {
-        run(new File(getBasedir(), "src/test/resources/default.pom.xml"));
+    public void testDefaultR4MojoGoal() throws Exception {
+        run(new File(getBasedir(), "src/test/resources/default.r4.pom.xml"));
     }
 
-    public void testProfilesMojoGoal() throws Exception {
-        run(new File(getBasedir(), "src/test/resources/profiles.pom.xml"));
+    public void testProfilesR4MojoGoal() throws Exception {
+        run(new File(getBasedir(), "src/test/resources/profiles.r4.pom.xml"));
     }
 
-    public void testFullurlMojoGoal() throws Exception {
-        run(new File(getBasedir(), "src/test/resources/fullurl.pom.xml"));
+    public void testFullurlR4MojoGoal() throws Exception {
+        run(new File(getBasedir(), "src/test/resources/fullurl.r4.pom.xml"));
+    }
+
+    public void testFullurlR5MojoGoal() throws Exception {
+        run(new File(getBasedir(), "src/test/resources/fullurl.r5.pom.xml"));
     }
 
     private void run(File pomFile) throws Exception {

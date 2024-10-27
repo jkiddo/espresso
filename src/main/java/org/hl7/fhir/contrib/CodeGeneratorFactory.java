@@ -124,7 +124,7 @@ public class CodeGeneratorFactory {
             }
 
             logger.info("Code generation completed.");
-            logger.info("validator cli equivalent: java -jar validator_cli.jar -codegen -version {} -ig {}#{} -output {} -package-name {} -profiles {}", npmPackage.fhirVersion(), npmPackage.id(), npmPackage.version(), outputFolder, packageName, profilesWhitelist.stream().map(e -> e.replace("/StructureDefinition/","/StructureDefinition-")).collect(Collectors.joining(",")));
+            logger.info("validator cli equivalent: java -jar validator_cli.jar -codegen -version {} -ig {}#{} -output {} -package-name {} -profiles {}", FhirVersionEnum.forVersionString(npmPackage.fhirVersion()), npmPackage.id(), npmPackage.version(), outputFolder, packageName, profilesWhitelist.stream().map(e -> e.replace("/StructureDefinition/","/StructureDefinition-")).collect(Collectors.joining(",")));
         }
 
         abstract protected void generateCode(String canonicalUrl, String date) throws IOException;
@@ -184,7 +184,7 @@ public class CodeGeneratorFactory {
         }
 
         private void loadDefinitions() throws IOException {
-            var parser = FhirContext.forR4().newJsonParser();
+            var parser = FhirContext.forR5().newJsonParser();
             var zis = new ZipInputStream(new DefaultResourceLoader().getResource("classpath:/r5/definitions.json.zip").getInputStream());
 
             ZipEntry entry;
