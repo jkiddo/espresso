@@ -113,6 +113,7 @@ public class CodeGeneratorFactory {
         public void generate() {
 
             logger.info("Starting code generation on {} profiles ...", profilesWhitelist.size());
+            logger.info("validator cli equivalent: java -jar validator_cli.jar -codegen -version {} -ig {}#{} -output {} -package-name {} -profiles {}", FhirVersionEnum.forVersionString(npmPackage.fhirVersion()), npmPackage.id(), npmPackage.version(), outputFolder, packageName, profilesWhitelist.stream().map(e -> e.replace("/StructureDefinition/","/StructureDefinition-")).collect(Collectors.joining(",")));
 
             for (var canonicalUrl : profilesWhitelist) {
                 logger.info("Generating code for profile: {}", canonicalUrl);
@@ -124,7 +125,7 @@ public class CodeGeneratorFactory {
             }
 
             logger.info("Code generation completed.");
-            logger.info("validator cli equivalent: java -jar validator_cli.jar -codegen -version {} -ig {}#{} -output {} -package-name {} -profiles {}", FhirVersionEnum.forVersionString(npmPackage.fhirVersion()), npmPackage.id(), npmPackage.version(), outputFolder, packageName, profilesWhitelist.stream().map(e -> e.replace("/StructureDefinition/","/StructureDefinition-")).collect(Collectors.joining(",")));
+
         }
 
         abstract protected void generateCode(String canonicalUrl, String date) throws IOException;
