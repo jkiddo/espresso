@@ -2,12 +2,15 @@ import ca.uhn.fhir.jpa.packages.loader.PackageLoaderSvc;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.hl7.fhir.contrib.CodeGenPlugin;
-import org.hl7.fhir.r5.context.SimpleWorkerContext;
+
+import org.hl7.fhir.contrib.ContextBuilder;
+
 import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
 import org.hl7.fhir.utilities.npm.NpmPackage;
 
 import java.io.*;
 import java.nio.file.Path;
+import java.util.UUID;
 
 public class PluginTest extends AbstractMojoTestCase {
 
@@ -24,7 +27,7 @@ public class PluginTest extends AbstractMojoTestCase {
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        FileUtils.deleteDirectory(Path.of(getBasedir(), "target/generated-sources/java").toFile());
+        //FileUtils.deleteDirectory(Path.of(getBasedir(), "target/generated-sources/java").toFile());
     }
 
     /**
@@ -33,6 +36,11 @@ public class PluginTest extends AbstractMojoTestCase {
 
     public void testDefaultR4MojoGoal() throws Exception {
         run(new File(getBasedir(), "src/test/resources/default.r4.pom.xml"));
+
+        //var dkCorePatient = new org.hl7.fhir.example.generated.DkCorePatient().setCpr(new org.hl7.fhir.example.generated.DkCoreCprIdentifier().setValue(UUID.randomUUID().toString()));
+        //dkCorePatient.build(createWorkerContextR4Example());
+
+
     }
 
     public void testProfilesR4MojoGoal() throws Exception {
@@ -52,12 +60,10 @@ public class PluginTest extends AbstractMojoTestCase {
     }
 
     private org.hl7.fhir.r4.context.SimpleWorkerContext createWorkerContextR4Example() throws IOException {
-        return org.hl7.fhir.r4.context.SimpleWorkerContext.fromPackage(new FilesystemPackageCacheManager.Builder().build().loadPackage("hl7.fhir.dk.core", "3.2.0"));
+        return ContextBuilder.usingR4(new FilesystemPackageCacheManager.Builder().build().loadPackage("hl7.fhir.dk.core", "3.2.0")).build();
     }
 
     private org.hl7.fhir.r5.context.SimpleWorkerContext createWorkerContextR5Example() throws IOException {
-        var npmAsBytes = new PackageLoaderSvc().loadPackageUrlContents("https://build.fhir.org/ig/hl7-eu/gravitate-health/toc.html");
-        var npmPackage = NpmPackage.fromPackage(new ByteArrayInputStream(npmAsBytes));
-        return new SimpleWorkerContext.SimpleWorkerContextBuilder().fromPackage(npmPackage);
+        return ContextBuilder.usingR5(NpmPackage.fromPackage(new ByteArrayInputStream(new PackageLoaderSvc().loadPackageUrlContents("https://build.fhir.org/ig/hl7-eu/gravitate-health/toc.html")))).build();
     }
 }

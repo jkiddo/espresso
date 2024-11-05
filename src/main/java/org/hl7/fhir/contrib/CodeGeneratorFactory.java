@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.DefaultResourceLoader;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -20,8 +19,6 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 public class CodeGeneratorFactory {
 
@@ -99,11 +96,9 @@ public class CodeGeneratorFactory {
     public abstract class PECodeGenerator {
         private final Set<String> profilesWhitelist;
         private final String date;
-        protected final NpmPackage npmPackage;
 
-        public PECodeGenerator(Set<String> canonicals, NpmPackage npmPackage) {
+        public PECodeGenerator(Set<String> canonicals) {
             this.profilesWhitelist = canonicals;
-            this.npmPackage = npmPackage;
             this.date = new Date().toString();
         }
 
@@ -113,7 +108,7 @@ public class CodeGeneratorFactory {
         public void generate() {
 
             logger.info("Starting code generation on {} profiles ...", profilesWhitelist.size());
-            logger.info("validator cli equivalent: java -jar validator_cli.jar -codegen -version {} -ig {}#{} -output {} -package-name {} -profiles {}", FhirVersionEnum.forVersionString(npmPackage.fhirVersion()), npmPackage.id(), npmPackage.version(), outputFolder, packageName, profilesWhitelist.stream().map(e -> e.replace("/StructureDefinition/","/StructureDefinition-")).collect(Collectors.joining(",")));
+            logger.info("validator cli equivalent: java -jar validator_cli.jar -codegen -version {} -ig {}#{} -output {} -package-name {} -profiles {}", FhirVersionEnum.forVersionString(npmPackage.fhirVersion()), npmPackage.id(), npmPackage.version(), outputFolder, packageName, profilesWhitelist.stream().map(e -> e.replace("/StructureDefinition/", "/StructureDefinition-")).collect(Collectors.joining(",")));
 
             for (var canonicalUrl : profilesWhitelist) {
                 logger.info("Generating code for profile: {}", canonicalUrl);
@@ -136,34 +131,8 @@ public class CodeGeneratorFactory {
         private final org.hl7.fhir.r4.context.SimpleWorkerContext workerContext;
 
         R4PECodeGenerator(NpmPackage npmPackage, Set<String> profilesWhitelist) throws Exception {
-            super(profilesWhitelist, npmPackage);
-            this.workerContext = org.hl7.fhir.r4.context.SimpleWorkerContext.fromPackage(this.npmPackage);
-            loadDefinitions();
-            workerContext.setExpansionProfile(new org.hl7.fhir.r4.model.Parameters());
-        }
-
-        private void loadDefinitions() throws IOException {
-
-            var parser = FhirContext.forR4().newJsonParser();
-            var zis = new ZipInputStream(new DefaultResourceLoader().getResource("classpath:/r4/definitions.json.zip").getInputStream());
-
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                if (entry.getName().endsWith(".json")) {
-                    var resource = (org.hl7.fhir.r4.model.Resource) parser.parseResource(new String(zis.readAllBytes()));
-                    try {
-                        if (resource.getResourceType() == org.hl7.fhir.r4.model.ResourceType.Bundle) {
-                            for (org.hl7.fhir.r4.model.Bundle.BundleEntryComponent e : ((org.hl7.fhir.r4.model.Bundle) resource).getEntry()) {
-                                workerContext.cacheResource(e.getResource());
-                            }
-                        } else {
-                            workerContext.cacheResource(resource);
-                        }
-                    } catch (Exception e) {
-                        logger.debug("Error loading definitions", e);
-                    }
-                }
-            }
+            super(profilesWhitelist);
+            this.workerContext = ContextBuilder.usingR4(npmPackage).build();
         }
 
         @Override
@@ -178,35 +147,9 @@ public class CodeGeneratorFactory {
 
 
         R5PECodeGenerator(NpmPackage npmPackage, Set<String> profilesWhitelist) throws IOException {
-            super(profilesWhitelist, npmPackage);
-            this.workerContext = new org.hl7.fhir.r5.context.SimpleWorkerContext.SimpleWorkerContextBuilder().fromPackage(npmPackage);
-            loadDefinitions();
-            workerContext.setExpansionParameters(new org.hl7.fhir.r5.model.Parameters());
+            super(profilesWhitelist);
+            workerContext = ContextBuilder.usingR5(npmPackage).build();
         }
-
-        private void loadDefinitions() throws IOException {
-            var parser = FhirContext.forR5().newJsonParser();
-            var zis = new ZipInputStream(new DefaultResourceLoader().getResource("classpath:/r5/definitions.json.zip").getInputStream());
-
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                if (entry.getName().endsWith(".json")) {
-                    var resource = (org.hl7.fhir.r5.model.Resource) parser.parseResource(new String(zis.readAllBytes()));
-                    try {
-                        if (resource.getResourceType() == org.hl7.fhir.r5.model.ResourceType.Bundle) {
-                            for (org.hl7.fhir.r5.model.Bundle.BundleEntryComponent e : ((org.hl7.fhir.r5.model.Bundle) resource).getEntry()) {
-                                workerContext.cacheResource(e.getResource());
-                            }
-                        } else {
-                            workerContext.cacheResource(resource);
-                        }
-                    } catch (Exception e) {
-                        logger.debug("Error loading definitions", e);
-                    }
-                }
-            }
-        }
-
 
         @Override
         public void generateCode(String canonicalUrl, String date) throws IOException {
