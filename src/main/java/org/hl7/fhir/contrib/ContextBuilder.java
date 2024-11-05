@@ -3,6 +3,7 @@ package org.hl7.fhir.contrib;
 
 import ca.uhn.fhir.context.FhirContext;
 
+import ca.uhn.fhir.context.FhirVersionEnum;
 import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,9 @@ public class ContextBuilder {
     }
 
     public static R4ContextBuilder usingR4(NpmPackage npmPackage) {
+        if (FhirVersionEnum.forVersionString(npmPackage.fhirVersion()) != FhirVersionEnum.R4) {
+            throw new IllegalArgumentException("NpmPackage is not for FHIR R4");
+        }
         try {
             return new R4ContextBuilder(npmPackage);
         } catch (IOException e) {
@@ -29,6 +33,9 @@ public class ContextBuilder {
     }
 
     public static R5ContextBuilder usingR5(NpmPackage npmPackage) {
+        if (FhirVersionEnum.forVersionString(npmPackage.fhirVersion()) != FhirVersionEnum.R5) {
+            throw new IllegalArgumentException("NpmPackage is not for FHIR R5");
+        }
         try {
             return new R5ContextBuilder(npmPackage);
         } catch (IOException e) {
