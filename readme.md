@@ -6,35 +6,35 @@ This project is a proof of concept for generating Java classes from FHIR profile
 
 ```xml
 <build>
-        <plugins>
-            <plugin>
-                <groupId>org.hl7.fhir.contrib</groupId>
-                <artifactId>fhir-codegen-maven-plugin</artifactId>
-                <version>1.0-SNAPSHOT</version>
-                <configuration>
-                    <packageName>test.packages</packageName>
-                    <packageId>https://hl7.dk/fhir/core/package.tgz</packageId>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>generate</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
+    <plugins>
+        <plugin>
+            <groupId>org.hl7.fhir.contrib</groupId>
+            <artifactId>fhir-codegen-maven-plugin</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <configuration>
+                <packageName>test.packages</packageName>
+                <packageId>https://hl7.dk/fhir/core/package.tgz</packageId>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>generate</id>
+                    <goals>
+                        <goal>generate</goal>
+                    </goals>
 
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
 ```
 
-#### Build the core projects on https://github.com/hapifhir/org.hl7.fhir.core
+#### Dependency on HAPI core projects
 
-This project relies heavily on the core projects from the HAPI FHIR library. The core projects are available in the
+This project relies heavily on the core projects from the [HAPI FHIR library](https://github.com/hapifhir/org.hl7.fhir.core). The core projects are available in the
 Maven Central Repository, but from time to time `edge`-builds are needed. Do that locally by running the following on
 the core project:
-`mvn wrapper:wrapper -Dmaven=3.6.3 clean install`
+`mvn wrapper:wrapper -Dmaven=3.6.3 -Dmaven.test.skip clean install`
 
 #### Test use of the core projects in e.g. a Spring Boot application
 
