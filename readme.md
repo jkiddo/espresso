@@ -4,6 +4,8 @@ This project is a proof of concept for generating Java classes from FHIR profile
 
 ## Usage as Maven plugin
 
+Add the following plugin to your existing Maven setup and generated sources with `mvn generate-sources`:
+
 ```xml
 <build>
     <plugins>
@@ -21,7 +23,6 @@ This project is a proof of concept for generating Java classes from FHIR profile
                     <goals>
                         <goal>generate</goal>
                     </goals>
-
                 </execution>
             </executions>
         </plugin>
