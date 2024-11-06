@@ -10,7 +10,6 @@ import org.hl7.fhir.utilities.npm.NpmPackage;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.util.UUID;
 
 public class PluginTest extends AbstractMojoTestCase {
 
@@ -27,7 +26,7 @@ public class PluginTest extends AbstractMojoTestCase {
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        //FileUtils.deleteDirectory(Path.of(getBasedir(), "target/generated-sources/java").toFile());
+        FileUtils.deleteDirectory(Path.of(getBasedir(), "target/generated-sources/java").toFile());
     }
 
     /**
@@ -38,7 +37,7 @@ public class PluginTest extends AbstractMojoTestCase {
         run(new File(getBasedir(), "src/test/resources/default.r4.pom.xml"));
 
         //var dkCorePatient = new org.hl7.fhir.example.generated.DkCorePatient().setCpr(new org.hl7.fhir.example.generated.DkCoreCprIdentifier().setValue(UUID.randomUUID().toString()));
-        //dkCorePatient.build(createWorkerContextR4Example());
+        //var patient = dkCorePatient.build(createWorkerContextR4Example());
 
 
     }
@@ -53,6 +52,8 @@ public class PluginTest extends AbstractMojoTestCase {
 
     public void testFullurlR5MojoGoal() throws Exception {
         run(new File(getBasedir(), "src/test/resources/fullurl.r5.pom.xml"));
+
+        //var indication = new ClinicalUseDefinitionIndicationUvEpi().build(createWorkerContextR5Example());
     }
 
     private void run(File pomFile) throws Exception {
@@ -64,6 +65,6 @@ public class PluginTest extends AbstractMojoTestCase {
     }
 
     private org.hl7.fhir.r5.context.SimpleWorkerContext createWorkerContextR5Example() throws IOException {
-        return ContextBuilder.usingR5(NpmPackage.fromPackage(new ByteArrayInputStream(new PackageLoaderSvc().loadPackageUrlContents("https://build.fhir.org/ig/hl7-eu/gravitate-health/toc.html")))).build();
+        return ContextBuilder.usingR5(NpmPackage.fromPackage(new ByteArrayInputStream(new PackageLoaderSvc().loadPackageUrlContents("https://hl7.org/fhir/uv/emedicinal-product-info/STU1/package.tgz")))).build();
     }
 }

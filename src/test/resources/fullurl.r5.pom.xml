@@ -16,7 +16,7 @@
                 <artifactId>fhir-codegen-maven-plugin</artifactId>
                 <version>1.0-SNAPSHOT</version>
                 <configuration>
-                    <packageId>https://build.fhir.org/ig/HL7/emedicinal-product-info/package.tgz</packageId>
+                    <packageId>https://hl7.org/fhir/uv/emedicinal-product-info/STU1/package.tgz</packageId>
                 </configuration>
                 <executions>
                     <execution>
