@@ -5,6 +5,10 @@ import org.hl7.fhir.contrib.CodeGenPlugin;
 
 import org.hl7.fhir.contrib.ContextBuilder;
 
+
+//import org.hl7.fhir.example.generated.EhealthCommunication;
+import org.hl7.fhir.r4.context.SimpleWorkerContext;
+import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
 import org.hl7.fhir.utilities.npm.NpmPackage;
 
@@ -26,7 +30,7 @@ public class PluginTest extends AbstractMojoTestCase {
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        FileUtils.deleteDirectory(Path.of(getBasedir(), "target/generated-sources/java").toFile());
+        //FileUtils.deleteDirectory(Path.of(getBasedir(), "target/generated-sources/java").toFile());
     }
 
     /**
@@ -49,6 +53,17 @@ public class PluginTest extends AbstractMojoTestCase {
     public void testFullurlR4MojoGoal() throws Exception {
         run(new File(getBasedir(), "src/test/resources/fullurl.r4.pom.xml"));
     }
+/*
+    public void testFutUrlR4MojoGoal() throws Exception {
+        //run(new File(getBasedir(), "src/test/resources/fut.r4.pom.xml"));
+        SimpleWorkerContext workerContext = createWorkerContextR4Example();
+        Patient p = new Patient();
+        p.setId("1");
+        Communication convertedOrigin = new EhealthCommunication(workerContext).setEpisodeOfCare(new Reference(p)).build();
+        EhealthCommunication toBeLoaded = new EhealthCommunication();
+        toBeLoaded.save(workerContext, convertedOrigin, false);
+        Communication result = toBeLoaded.build();
+    }*/
 
     public void testFullurlR5MojoGoal() throws Exception {
         run(new File(getBasedir(), "src/test/resources/fullurl.r5.pom.xml"));
@@ -61,7 +76,7 @@ public class PluginTest extends AbstractMojoTestCase {
     }
 
     private org.hl7.fhir.r4.context.SimpleWorkerContext createWorkerContextR4Example() throws IOException {
-        return ContextBuilder.usingR4(new FilesystemPackageCacheManager.Builder().build().loadPackage("hl7.fhir.dk.core", "3.2.0")).build();
+        return ContextBuilder.usingR4(new FilesystemPackageCacheManager.Builder().build().loadPackage("dk.ehealth.sundhed.fhir.ig.core", "3.3.0")).build();
     }
 
     private org.hl7.fhir.r5.context.SimpleWorkerContext createWorkerContextR5Example() throws IOException {

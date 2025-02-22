@@ -108,7 +108,7 @@ public class CodeGeneratorFactory {
         public void generate() {
 
             logger.info("Starting code generation on {} profiles ...", profilesWhitelist.size());
-            logger.info("validator cli equivalent: java -jar validator_cli.jar -codegen -version {} -ig {}#{} -output {} -package-name {} -profiles {}", FhirVersionEnum.forVersionString(npmPackage.fhirVersion()), npmPackage.id(), npmPackage.version(), outputFolder, packageName, profilesWhitelist.stream().map(e -> e.replace("/StructureDefinition/", "/StructureDefinition-")).collect(Collectors.joining(",")));
+            logger.info("validator cli equivalent: java -jar validator_cli.jar -codegen -version {} -ig {}#{} -output {} -package-name {} -profiles {}", FhirVersionEnum.forVersionString(npmPackage.fhirVersion()), npmPackage.id(), npmPackage.version(), outputFolder, packageName, profilesWhitelist.stream().map(e -> e.replace("/StructureDefinition/", "/StructureDefinition/")).collect(Collectors.joining(",")));
 
             for (var canonicalUrl : profilesWhitelist) {
                 logger.info("Generating code for profile: {}", canonicalUrl);

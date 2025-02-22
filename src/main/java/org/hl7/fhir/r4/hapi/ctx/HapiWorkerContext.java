@@ -17,9 +17,19 @@ import org.hl7.fhir.exceptions.TerminologyServiceException;
 import org.hl7.fhir.r4.context.IWorkerContext;
 import org.hl7.fhir.r4.formats.IParser;
 import org.hl7.fhir.r4.formats.ParserType;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.CodeSystem;
 import org.hl7.fhir.r4.model.CodeSystem.ConceptDefinitionComponent;
+import org.hl7.fhir.r4.model.CodeableConcept;
+import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.ConceptMap;
 import org.hl7.fhir.r4.model.ElementDefinition.ElementDefinitionBindingComponent;
+import org.hl7.fhir.r4.model.MetadataResource;
+import org.hl7.fhir.r4.model.Parameters;
+import org.hl7.fhir.r4.model.Resource;
+import org.hl7.fhir.r4.model.ResourceType;
+import org.hl7.fhir.r4.model.StructureDefinition;
+import org.hl7.fhir.r4.model.StructureMap;
+import org.hl7.fhir.r4.model.ValueSet;
 import org.hl7.fhir.r4.model.ValueSet.ConceptSetComponent;
 import org.hl7.fhir.r4.terminologies.ValueSetExpander;
 import org.hl7.fhir.r4.utils.validation.IResourceValidator;
@@ -28,8 +38,12 @@ import org.hl7.fhir.utilities.i18n.I18nBase;
 import org.hl7.fhir.utilities.validation.ValidationMessage.IssueSeverity;
 import org.hl7.fhir.utilities.validation.ValidationOptions;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -57,16 +71,6 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
             "url",
             "canonical");
 
-    private Map<String, CodeSystem> codeSystems = new HashMap();
-    private Map<String, ValueSet> valueSets = new HashMap();
-    private Map<String, ConceptMap> maps = new HashMap();
-    protected Map<String, StructureMap> transforms = new HashMap();
-    private Map<String, StructureDefinition> structures = new HashMap();
-    private Map<String, ImplementationGuide> guides = new HashMap();
-    private Map<String, CapabilityStatement> capstmts = new HashMap();
-    private Map<String, Questionnaire> questionnaires = new HashMap();
-    private Map<String, PlanDefinition> plans = new HashMap();
-
     private final FhirContext myCtx;
     private final Cache<String, Resource> myFetchedResourceCache;
     private IValidationSupport myValidationSupport;
@@ -79,7 +83,7 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
         myCtx = theCtx;
         myValidationSupport = theValidationSupport;
 
-        long timeoutMillis = HapiSystemProperties.getTestValidationResourceCachesMs();
+        long timeoutMillis = HapiSystemProperties.getValidationResourceCacheTimeoutMillis();
 
         myFetchedResourceCache = CacheFactory.build(timeoutMillis);
 
@@ -308,18 +312,7 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
     @Override
     @CoverageIgnore
     public List<MetadataResource> allConformanceResources() {
-        List<MetadataResource> result = new ArrayList();
-        result.addAll(this.structures.values());
-        result.addAll(this.guides.values());
-        result.addAll(this.capstmts.values());
-        result.addAll(this.codeSystems.values());
-        result.addAll(this.valueSets.values());
-        result.addAll(this.maps.values());
-        result.addAll(this.transforms.values());
-        result.addAll(this.plans.values());
-        result.addAll(this.questionnaires.values());
-        return result;
-        //throw new UnsupportedOperationException(Msg.code(268));
+        throw new UnsupportedOperationException(Msg.code(268));
     }
 
     @Override
@@ -421,18 +414,7 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 
     @Override
     public List<StructureDefinition> fetchTypeDefinitions(String s) {
-
-        List<StructureDefinition> types = new ArrayList<>();
-        Iterator<StructureDefinition> var3 = this.fetchResourcesByType(StructureDefinition.class).iterator();
-
-        while(var3.hasNext()) {
-            StructureDefinition sd = (StructureDefinition)var3.next();
-            if (s.equals(sd.getTypeTail())) {
-                types.add(sd);
-            }
-        }
-
-        return types;
+        return List.of();
     }
 
     @Override
@@ -479,10 +461,7 @@ public final class HapiWorkerContext extends I18nBase implements IWorkerContext 
 
     @Override
     public <T extends Resource> List<T> fetchResourcesByType(Class<T> aClass) {
-        return this.allConformanceResources().stream()
-                .filter(c -> c.getClass().isInstance(aClass))
-                .map( c -> (T) c)
-                .toList();
+        return List.of();
     }
 
     @Override
