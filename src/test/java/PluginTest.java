@@ -1,19 +1,16 @@
 import ca.uhn.fhir.jpa.packages.loader.PackageLoaderSvc;
-import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 import org.hl7.fhir.contrib.CodeGenPlugin;
 
 import org.hl7.fhir.contrib.ContextBuilder;
 
-
-//import org.hl7.fhir.example.generated.EhealthCommunication;
+import org.hl7.fhir.example.generated.EhealthCommunication;
 import org.hl7.fhir.r4.context.SimpleWorkerContext;
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
 import org.hl7.fhir.utilities.npm.NpmPackage;
 
 import java.io.*;
-import java.nio.file.Path;
 
 public class PluginTest extends AbstractMojoTestCase {
 
@@ -38,12 +35,10 @@ public class PluginTest extends AbstractMojoTestCase {
      */
 
     public void testDefaultR4MojoGoal() throws Exception {
-        run(new File(getBasedir(), "src/test/resources/default.r4.pom.xml"));
+        run(new File(getBasedir(), "src/test/resources/fut.r4.pom.xml"));
 
         //var dkCorePatient = new org.hl7.fhir.example.generated.DkCorePatient().setCpr(new org.hl7.fhir.example.generated.DkCoreCprIdentifier().setValue(UUID.randomUUID().toString()));
         //var patient = dkCorePatient.build(createWorkerContextR4Example());
-
-
     }
 
     public void testProfilesR4MojoGoal() throws Exception {
@@ -53,17 +48,21 @@ public class PluginTest extends AbstractMojoTestCase {
     public void testFullurlR4MojoGoal() throws Exception {
         run(new File(getBasedir(), "src/test/resources/fullurl.r4.pom.xml"));
     }
-/*
+
     public void testFutUrlR4MojoGoal() throws Exception {
         //run(new File(getBasedir(), "src/test/resources/fut.r4.pom.xml"));
         SimpleWorkerContext workerContext = createWorkerContextR4Example();
         Patient p = new Patient();
         p.setId("1");
-        Communication convertedOrigin = new EhealthCommunication(workerContext).setEpisodeOfCare(new Reference(p)).build();
-        EhealthCommunication toBeLoaded = new EhealthCommunication();
-        toBeLoaded.save(workerContext, convertedOrigin, false);
-        Communication result = toBeLoaded.build();
-    }*/
+        p.setActive(true);
+
+        EhealthCommunication customModel = new EhealthCommunication(workerContext).setEpisodeOfCare(new Reference(p)).setId("23").setStatus("stopped");
+        Communication convertedOrigin = customModel.build();
+        EhealthCommunication convertedCustomModel = EhealthCommunication.fromSource(workerContext, convertedOrigin);
+
+
+        assertEquals(customModel.getId(), convertedCustomModel.getId());
+    }
 
     public void testFullurlR5MojoGoal() throws Exception {
         run(new File(getBasedir(), "src/test/resources/fullurl.r5.pom.xml"));
@@ -76,7 +75,7 @@ public class PluginTest extends AbstractMojoTestCase {
     }
 
     private org.hl7.fhir.r4.context.SimpleWorkerContext createWorkerContextR4Example() throws IOException {
-        return ContextBuilder.usingR4(new FilesystemPackageCacheManager.Builder().build().loadPackage("dk.ehealth.sundhed.fhir.ig.core", "3.3.0")).build();
+        return ContextBuilder.usingR4(new FilesystemPackageCacheManager.Builder().build().loadPackage("dk.ehealth.sundhed.fhir.ig.core", "3.4.0")).build();
     }
 
     private org.hl7.fhir.r5.context.SimpleWorkerContext createWorkerContextR5Example() throws IOException {
